@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 220 24% 98%;
+  --foreground: 222 28% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 28% 12%;
+  --muted: 220 16% 95%;
+  --muted-foreground: 220 9% 46%;
+  --border: 220 16% 91%;
+  --primary: 245 75% 60%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 262 72% 62%;
+  --success: 152 56% 40%;
+  --danger: 0 72% 56%;
+  --radius: 1.25rem;
+}
+
+.dark {
+  --background: 224 32% 6%;
+  --foreground: 220 22% 95%;
+  --card: 222 26% 10%;
+  --card-foreground: 220 22% 95%;
+  --muted: 222 20% 16%;
+  --muted-foreground: 220 12% 62%;
+  --border: 222 18% 18%;
+  --primary: 245 82% 67%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 262 78% 70%;
+  --success: 152 52% 50%;
+  --danger: 0 72% 62%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* İnce, premium scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); background-clip: content-box; }
+
+/* Glassmorphism — yalnızca nav/topbar gibi gerekli yerlerde */
+.glass {
+  background: hsl(var(--card) / 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Copilot benzeri imza gradient */
+.gradient-brand {
+  background-image: linear-gradient(135deg, hsl(245 80% 62%), hsl(262 75% 64%) 55%, hsl(322 75% 64%));
+}
+.text-gradient-brand {
+  background-image: linear-gradient(135deg, hsl(245 80% 62%), hsl(262 75% 64%) 55%, hsl(322 75% 64%));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
