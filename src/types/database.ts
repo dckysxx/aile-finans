@@ -102,6 +102,7 @@ export type Database = {
           is_recurring: boolean;
           recurring_day: number | null;
           income_source_id: string | null;
+          notify_enabled: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -119,6 +120,7 @@ export type Database = {
           is_recurring?: boolean;
           recurring_day?: number | null;
           income_source_id?: string | null;
+          notify_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -136,9 +138,22 @@ export type Database = {
           is_recurring?: boolean;
           recurring_day?: number | null;
           income_source_id?: string | null;
+          notify_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: { id: string; user_id: string; endpoint: string; p256dh: string; auth: string; created_at: string };
+        Insert: { id?: string; user_id: string; endpoint: string; p256dh: string; auth: string; created_at?: string };
+        Update: { id?: string; user_id?: string; endpoint?: string; p256dh?: string; auth?: string; created_at?: string };
+        Relationships: [];
+      };
+      notification_log: {
+        Row: { id: string; user_id: string; transaction_id: string; sent_on: string; sent_at: string };
+        Insert: { id?: string; user_id: string; transaction_id: string; sent_on?: string; sent_at?: string };
+        Update: { id?: string; user_id?: string; transaction_id?: string; sent_on?: string; sent_at?: string };
         Relationships: [];
       };
     };
@@ -164,3 +179,5 @@ export type Transaction = Tables["transactions"]["Row"];
 
 export type TransactionInsert = Tables["transactions"]["Insert"];
 export type TransactionUpdate = Tables["transactions"]["Update"];
+
+export type PushSubscriptionRow = Tables["push_subscriptions"]["Row"];

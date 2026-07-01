@@ -110,3 +110,33 @@ Android (Chrome): menü (⋮) → **Uygulamayı yükle**.
 Notlar: PWA yalnızca HTTPS'te (yayında) tam çalışır; `npm run dev` yerine `npm run build && npm start`
 ile lokalde de denenebilir. Güncellemeler sunucudan otomatik alınır (yeni sürüm açılışta uygulanır).
 Giriş yapmayan kullanıcı hiçbir sayfaya erişemez; çıkış sonrası geri tuşuyla eski sayfalar açılamaz.
+
+---
+
+## Push Bildirimleri (Web Push) Kurulumu
+Son ödeme günü gelen ödemeler için, uygulama kapalıyken bile bildirim gönderir.
+
+1) **Migration:** Supabase → SQL Editor → `supabase/migration-3-push-notifications.sql` çalıştır.
+2) **VAPID anahtarları üret:**
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+3) **Ortam değişkenlerini** hem `.env.local`'e hem Vercel'e ekle (bkz. `.env.example`):
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+   - `SUPABASE_SERVICE_ROLE_KEY` (Project Settings → API → service_role — yalnız sunucuda kullanılır)
+   - `CRON_SECRET` (rastgele uzun bir değer)
+4) **Zamanlayıcı:** `vercel.json` içindeki cron `/api/cron/notify`'ı her 2 saatte bir tetikler.
+   - Not: Vercel **Hobby** planında cron günde yalnız 1 kez çalışır. Her 2 saatte bir için ya **Pro** plan
+     gerekir ya da harici bir zamanlayıcı (ör. cron-job.org) şu adresi çağırır:
+     `https://SITEN/api/cron/notify?key=CRON_SECRET`
+
+### iOS notu (önemli)
+Web Push, iPhone'da yalnız **ana ekrana eklenmiş** PWA'da ve **iOS 16.4+** ile çalışır
+(normal Safari sekmesinde çalışmaz). Kullanıcı Bildirimler sayfasındaki **Etkinleştir**
+düğmesine bastığında izin istenir (ilk girişte istenmez).
+
+### Mantık
+- Bugün son ödeme günü olan, ödenmemiş ve bildirimi **açık** kayıtlar kontrol edilir.
+- Gün boyunca ~2 saatte bir gönderilir; gün bitince otomatik durur, ertesi gün aynı kayıt için tekrarlamaz.
+- Her ödeme kartındaki **yeşil anahtar** o ödeme için bildirimi açar/kapatır (kullanıcı bazında saklanır).
+- Yalnız bildirimi açık kullanıcılar sorgulanır → gereksiz sorgu yok, ölçeklenebilir.

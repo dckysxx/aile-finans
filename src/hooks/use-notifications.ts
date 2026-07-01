@@ -15,6 +15,8 @@ export interface AppNotification {
   title: string;
   body: string;
   severity: Severity;
+  transactionId?: string;
+  notifyEnabled?: boolean;
 }
 
 const num = (v: number | string) => Number(v) || 0;
@@ -45,6 +47,8 @@ function build(txns: Transaction[], enabled: Record<NotifKind, boolean>): AppNot
           title: `${t.category} ödemesi yaklaşıyor`,
           body: `${formatCurrency(num(t.amount))} · ${d === 0 ? "bugün" : `${d} gün içinde`}`,
           severity: d <= 2 ? "danger" : "warning",
+          transactionId: t.id,
+          notifyEnabled: t.notify_enabled,
         })
       );
   }
@@ -96,8 +100,8 @@ function build(txns: Transaction[], enabled: Record<NotifKind, boolean>): AppNot
 }
 
 export function useNotifications() {
-  const { txns, loading, error } = useFinanceData();
+  const { txns, loading, error, reload } = useFinanceData();
   const enabled = useNotificationPrefs((s) => s.enabled);
   const notifications = useMemo(() => build(txns, enabled), [txns, enabled]);
-  return { notifications, loading, error };
+  return { notifications, loading, error, reload };
 }
