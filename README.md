@@ -88,3 +88,11 @@ supabase/  schema.sql · seed-example.sql
 - **Faz 3 ✅** Auth (davet-only) + Supabase bağlama + store/hook'lar
 - **Faz 4 ✅** Gelir · Gider · Harcama · Kalan Para · Bildirimler · Filtre/Arama · Profil
 - **Sonraki adımlar (opsiyonel):** aile yönetimi (üye davet + rol atama UI), Supabase Storage ile avatar yükleme, "kullanıcı" filtresiyle aile geneli görünüm, CSV dışa aktarma
+
+---
+
+## Güncelleme Notu (gelir kaynağı ilişkisi)
+Yeni sürümde gider/harcamalar bir **gelir kaynağına** bağlanır ve her gelir kategorisi
+kendi bakiyesini bağımsız hesaplar. Mevcut Supabase veritabanında **bir kez** şu migration'ı çalıştır:
+`supabase/migration-2-income-source.sql` (SQL Editor). Güvenlidir: kolon nullable eklenir,
+mevcut kayıtlar bozulmaz. Eski kayıtların kaynağı boş kalır; yeni eklemelerde kaynak seçimi zorunludur.

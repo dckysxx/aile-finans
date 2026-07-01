@@ -75,6 +75,7 @@ create table if not exists public.transactions (
   payment_status  payment_status,                      -- yalnız 'expense' için anlamlı
   is_recurring    boolean not null default false,      -- düzenli gider mi
   recurring_day   smallint check (recurring_day between 1 and 31),
+  income_source_id uuid references public.categories(id) on delete set null,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
@@ -83,6 +84,7 @@ create index if not exists transactions_user_idx   on public.transactions(user_i
 create index if not exists transactions_family_idx on public.transactions(family_id);
 create index if not exists transactions_date_idx   on public.transactions(date);
 create index if not exists transactions_type_idx   on public.transactions(type);
+create index if not exists transactions_source_idx on public.transactions(income_source_id);
 
 -- ============================================================
 --  3) TRIGGER FONKSİYONLARI

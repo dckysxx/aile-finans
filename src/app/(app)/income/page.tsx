@@ -5,8 +5,9 @@ export default function IncomePage() {
     <TransactionsPage
       type="income"
       title="Gelir"
-      subtitle="Maaş, ek gelir ve diğer kaynaklar."
+      subtitle="Her gelir kaynağı kendi bakiyesiyle."
       addLabel="Gelir Ekle"
+      variant="income"
     />
   );
 }

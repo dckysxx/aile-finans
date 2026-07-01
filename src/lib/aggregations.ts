@@ -19,7 +19,16 @@ export interface DashboardData {
   weekly: { day: string; amount: number }[];
   recent: Transaction[];
   upcoming: { id: string; name: string; amount: number; dueInDays: number }[];
+  incomeBalances: IncomeBalance[];
   isEmpty: boolean;
+}
+
+export interface IncomeBalance {
+  name: string;
+  color: string;
+  income: number;
+  out: number;
+  remaining: number;
 }
 
 const num = (v: number | string) => Number(v) || 0;
@@ -43,7 +52,8 @@ function daysUntilRecurring(day: number, now: Date) {
 export function buildDashboard(
   txns: Transaction[],
   categoryColors: Record<string, string>,
-  period: Period
+  period: Period,
+  idToName: Record<string, string> = {}
 ): DashboardData {
   const now = new Date();
 
@@ -122,9 +132,37 @@ export function buildDashboard(
     .sort((a, b) => a.dueInDays - b.dueInDays)
     .slice(0, 3);
 
+  // Gelir kaynağı bazlı bakiyeler (her kaynak bağımsız)
+  const incomeMap = new Map<string, number>();
+  scoped
+    .filter((t) => t.type === "income")
+    .forEach((t) => incomeMap.set(t.category, (incomeMap.get(t.category) ?? 0) + num(t.amount)));
+
+  const outMap = new Map<string, number>();
+  scoped
+    .filter((t) => t.type !== "income" && t.income_source_id)
+    .forEach((t) => {
+      const name = idToName[t.income_source_id as string];
+      if (!name) return;
+      outMap.set(name, (outMap.get(name) ?? 0) + num(t.amount));
+    });
+
+  const incomeBalances: IncomeBalance[] = Array.from(incomeMap.entries())
+    .map(([name, income]) => {
+      const out = outMap.get(name) ?? 0;
+      return {
+        name,
+        color: categoryColors[name] ?? "#6366f1",
+        income,
+        out,
+        remaining: income - out,
+      };
+    })
+    .sort((a, b) => b.income - a.income);
+
   return {
     totalIncome, totalExpense, totalSpending, remaining, savingsRate,
-    monthly, category, weekly, recent, upcoming,
+    monthly, category, weekly, recent, upcoming, incomeBalances,
     isEmpty: txns.length === 0,
   };
 }

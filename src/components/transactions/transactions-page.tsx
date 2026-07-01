@@ -9,6 +9,7 @@ import { Modal } from "@/components/shared/modal";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { TransactionForm } from "@/components/transactions/transaction-form";
 import { TransactionList } from "@/components/transactions/transaction-list";
+import { IncomeCategoryCards } from "@/components/transactions/income-category-cards";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useCategories } from "@/hooks/use-categories";
 import { filterTransactions, defaultFilters, type TxnFilters } from "@/lib/filters";
@@ -20,11 +21,13 @@ interface TransactionsPageProps {
   title: string;
   subtitle: string;
   addLabel: string;
+  variant?: "default" | "income";
 }
 
-export function TransactionsPage({ type, title, subtitle, addLabel }: TransactionsPageProps) {
+export function TransactionsPage({ type, title, subtitle, addLabel, variant = "default" }: TransactionsPageProps) {
   const { items, loading, add, update, remove } = useTransactions(type);
   const { categories } = useCategories(type);
+  const { categories: incomeCategories } = useCategories("income");
 
   const [filters, setFilters] = useState<TxnFilters>(defaultFilters);
   const [formOpen, setFormOpen] = useState(false);
@@ -72,23 +75,35 @@ export function TransactionsPage({ type, title, subtitle, addLabel }: Transactio
       </header>
 
       {/* Özet */}
-      <Card className={isIncome ? "border-none gradient-brand text-white" : ""}>
-        <CardContent className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className={`text-sm ${isIncome ? "text-white/80" : "text-muted-foreground"}`}>
-              {filtered.length} kayıt · seçili dönem toplamı
-            </p>
-            <p className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">
-              {formatCurrency(total)}
-            </p>
+      {variant === "income" ? (
+        loading ? (
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-28 rounded-2xl" />
+            ))}
           </div>
-          {type === "expense" && unpaidCount > 0 && (
-            <span className="rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger">
-              {unpaidCount} ödenmemiş
-            </span>
-          )}
-        </CardContent>
-      </Card>
+        ) : (
+          <IncomeCategoryCards items={filtered} categories={categories} />
+        )
+      ) : (
+        <Card className="">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                {filtered.length} kayıt · seçili dönem toplamı
+              </p>
+              <p className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">
+                {formatCurrency(total)}
+              </p>
+            </div>
+            {type === "expense" && unpaidCount > 0 && (
+              <span className="rounded-xl bg-danger/10 px-3 py-2 text-sm font-medium text-danger">
+                {unpaidCount} ödenmemiş
+              </span>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filtre */}
       <FilterBar filters={filters} onChange={setFilters} categories={categories} />
@@ -118,6 +133,7 @@ export function TransactionsPage({ type, title, subtitle, addLabel }: Transactio
         <TransactionForm
           type={type}
           categories={categories}
+          incomeCategories={incomeCategories}
           initial={editing ?? undefined}
           onSubmit={(input) => (editing ? update(editing.id, input) : add(input))}
           onDone={() => setFormOpen(false)}

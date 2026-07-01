@@ -13,6 +13,7 @@ export type TxnFormInput = {
   payment_status: Transaction["payment_status"];
   is_recurring: boolean;
   recurring_day: number | null;
+  income_source_id: string | null;
 };
 
 export function useTransactions(type: TransactionType) {

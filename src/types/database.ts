@@ -101,6 +101,7 @@ export type Database = {
           payment_status: PaymentStatus | null;
           is_recurring: boolean;
           recurring_day: number | null;
+          income_source_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -117,6 +118,7 @@ export type Database = {
           payment_status?: PaymentStatus | null;
           is_recurring?: boolean;
           recurring_day?: number | null;
+          income_source_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -133,6 +135,7 @@ export type Database = {
           payment_status?: PaymentStatus | null;
           is_recurring?: boolean;
           recurring_day?: number | null;
+          income_source_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };

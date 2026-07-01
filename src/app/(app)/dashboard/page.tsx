@@ -16,6 +16,7 @@ import { IncomeExpenseChart } from "@/components/charts/income-expense-chart";
 import { CategoryPie } from "@/components/charts/category-pie";
 import { WeeklyBar } from "@/components/charts/weekly-bar";
 import { useDashboard } from "@/hooks/use-dashboard";
+import type { IncomeBalance } from "@/lib/aggregations";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 const icons: Record<string, LucideIcon> = {
@@ -75,18 +76,30 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      <Card className="relative overflow-hidden border-none gradient-brand text-white shadow-glass">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-        <CardContent className="relative">
-          <p className="text-sm/none text-white/80">Kalan para</p>
-          <p className="mt-2 text-4xl font-semibold tracking-tight tabular-nums">{formatCurrency(data.remaining)}</p>
-          <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 text-sm">
-            <span className="text-white/85">Tasarruf <b className="font-semibold">%{data.savingsRate}</b></span>
-            <span className="text-white/85">Gelir <b className="font-semibold">{formatCurrency(data.totalIncome)}</b></span>
-            <span className="text-white/85">Gider <b className="font-semibold">{formatCurrency(data.totalExpense + data.totalSpending)}</b></span>
+      {/* Gelir kaynağı bazlı bakiyeler */}
+      {data.incomeBalances.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium text-muted-foreground">Gelir Kaynağı Bakiyeleri</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {data.incomeBalances.map((b, i) => (
+              <IncomeBalanceCard key={b.name} balance={b} delay={i * 0.05} />
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </section>
+      ) : (
+        <Card className="relative overflow-hidden border-none gradient-brand text-white shadow-glass">
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          <CardContent className="relative">
+            <p className="text-sm/none text-white/80">Kalan para</p>
+            <p className="mt-2 text-4xl font-semibold tracking-tight tabular-nums">{formatCurrency(data.remaining)}</p>
+            <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 text-sm">
+              <span className="text-white/85">Tasarruf <b className="font-semibold">%{data.savingsRate}</b></span>
+              <span className="text-white/85">Gelir <b className="font-semibold">{formatCurrency(data.totalIncome)}</b></span>
+              <span className="text-white/85">Gider <b className="font-semibold">{formatCurrency(data.totalExpense + data.totalSpending)}</b></span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Toplam Gelir" value={formatCurrency(data.totalIncome)} icon={TrendingUp} accent="success" delay={0.05} />
@@ -206,5 +219,37 @@ function DashboardSkeleton() {
         <Skeleton className="h-72 rounded-2xl" />
       </div>
     </div>
+  );
+}
+
+function IncomeBalanceCard({ balance, delay }: { balance: IncomeBalance; delay: number }) {
+  const Icon = iconFor(balance.name);
+  const neg = balance.remaining < 0;
+  return (
+    <Card className="animate-fade-up p-5" style={{ animationDelay: `${delay}s` }}>
+      <div className="flex items-center gap-2">
+        <span
+          className="grid h-9 w-9 place-items-center rounded-xl"
+          style={{ background: `${balance.color}1a`, color: balance.color }}
+        >
+          <Icon className="h-[18px] w-[18px]" />
+        </span>
+        <span className="text-sm font-semibold">{balance.name}</span>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">Kalan bakiye</p>
+      <p className={`text-2xl font-semibold tracking-tight tabular-nums ${neg ? "text-danger" : ""}`}>
+        {formatCurrency(balance.remaining)}
+      </p>
+      <div className="mt-4 space-y-1.5 border-t border-border pt-3 text-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Toplam Gelir</span>
+          <span className="font-medium tabular-nums text-success">{formatCurrency(balance.income)}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Toplam Harcama</span>
+          <span className="font-medium tabular-nums">−{formatCurrency(balance.out)}</span>
+        </div>
+      </div>
+    </Card>
   );
 }

@@ -28,18 +28,20 @@ export function useDashboard() {
           .select("*")
           .gte("date", since.toISOString().slice(0, 10))
           .order("date", { ascending: false }),
-        supabase.from("categories").select("name, color"),
+        supabase.from("categories").select("id, name, color"),
       ]);
 
       if (txnRes.error) throw txnRes.error;
 
       const colors: Record<string, string> = {};
-      const cats = (catRes.data ?? []) as { name: string; color: string }[];
+      const idToName: Record<string, string> = {};
+      const cats = (catRes.data ?? []) as { id: string; name: string; color: string }[];
       cats.forEach((c) => {
         colors[c.name] = c.color;
+        idToName[c.id] = c.name;
       });
 
-      setData(buildDashboard((txnRes.data ?? []) as Transaction[], colors, period));
+      setData(buildDashboard((txnRes.data ?? []) as Transaction[], colors, period, idToName));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Veri yüklenemedi.");
     } finally {

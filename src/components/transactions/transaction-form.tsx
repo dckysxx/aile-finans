@@ -19,15 +19,17 @@ const PAYMENT_OPTIONS: { value: PaymentStatus; label: string }[] = [
 interface TransactionFormProps {
   type: TransactionType;
   categories: Category[];
+  incomeCategories?: Category[];
   initial?: Transaction;
   onSubmit: (input: TxnFormInput) => Promise<{ error?: string }>;
   onDone: () => void;
 }
 
 export function TransactionForm({
-  type, categories, initial, onSubmit, onDone,
+  type, categories, incomeCategories = [], initial, onSubmit, onDone,
 }: TransactionFormProps) {
   const isExpense = type === "expense";
+  const needsSource = type === "expense" || type === "spending";
   const today = new Date().toISOString().slice(0, 10);
 
   const [category, setCategory] = useState(initial?.category ?? "");
@@ -42,6 +44,7 @@ export function TransactionForm({
   const [recurringDay, setRecurringDay] = useState(
     initial?.recurring_day ? String(initial.recurring_day) : ""
   );
+  const [incomeSourceId, setIncomeSourceId] = useState(initial?.income_source_id ?? "");
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +53,7 @@ export function TransactionForm({
     const value = parseFloat(amount.replace(",", "."));
     if (!category) return setError("Kategori seçin.");
     if (!value || value <= 0) return setError("Geçerli bir tutar girin.");
+    if (needsSource && !incomeSourceId) return setError("Gelir kaynağı seçin.");
 
     setSaving(true);
     setError(null);
@@ -62,6 +66,7 @@ export function TransactionForm({
       payment_status: isExpense ? paymentStatus : null,
       is_recurring: isExpense ? isRecurring : false,
       recurring_day: isExpense && isRecurring && recurringDay ? Number(recurringDay) : null,
+      income_source_id: needsSource ? incomeSourceId : null,
     });
     setSaving(false);
     if (error) return setError(error);
@@ -96,6 +101,25 @@ export function TransactionForm({
           })}
         </div>
       </div>
+
+      {/* Gelir kaynağı (gider & harcama için zorunlu) */}
+      {needsSource && (
+        <div>
+          <Label>Bu harcama hangi gelir kaynağından düşülsün?</Label>
+          <select
+            value={incomeSourceId}
+            onChange={(e) => setIncomeSourceId(e.target.value)}
+            className="h-12 w-full rounded-xl border border-border bg-card px-4 text-sm outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+          >
+            <option value="">Gelir kaynağı seçin…</option>
+            {incomeCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Tutar + Tarih */}
       <div className="grid grid-cols-2 gap-3">
