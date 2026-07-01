@@ -46,7 +46,12 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="overflow-y-auto p-5">{children}</div>
+            <div
+              className="overflow-y-auto p-5"
+              style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
+            >
+              {children}
+            </div>
           </motion.div>
         </div>
       )}

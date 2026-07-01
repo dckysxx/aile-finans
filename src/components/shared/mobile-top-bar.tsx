@@ -6,7 +6,7 @@ import { NotificationsBell } from "@/components/shared/notifications-bell";
 
 export function MobileTopBar() {
   return (
-    <header className="lg:hidden sticky top-0 z-30 glass border-b border-border">
+    <header className="lg:hidden sticky top-0 z-30 glass border-b border-border pt-safe">
       <div className="flex items-center justify-between px-4 py-3">
         <Link href="/dashboard" className="flex items-center gap-2">
           <span className="grid h-8 w-8 place-items-center rounded-lg gradient-brand text-white">

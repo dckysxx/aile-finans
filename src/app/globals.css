@@ -79,3 +79,31 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Mobil / PWA iyileştirmeleri ---------- */
+
+/* iOS: input odağında otomatik zoom'u engelle (font >= 16px olmalı) */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Scroll zinciri ve lastik-bant taşmasını sınırla (native his) */
+html,
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Safe-area yardımcıları (Dynamic Island / home indicator) */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.min-h-dvh-safe {
+  min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}

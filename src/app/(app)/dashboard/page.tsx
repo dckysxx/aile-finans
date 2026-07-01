@@ -7,14 +7,25 @@ import {
   Flame, Phone, Heart, Shirt, Bus, Gift, Sparkles, RotateCw,
   type LucideIcon,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/shared/stat-card";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { PeriodToggle } from "@/components/shared/period-toggle";
-import { IncomeExpenseChart } from "@/components/charts/income-expense-chart";
-import { CategoryPie } from "@/components/charts/category-pie";
-import { WeeklyBar } from "@/components/charts/weekly-bar";
+
+const IncomeExpenseChart = dynamic(
+  () => import("@/components/charts/income-expense-chart").then((m) => m.IncomeExpenseChart),
+  { ssr: false, loading: () => <Skeleton className="h-[240px] w-full rounded-xl" /> }
+);
+const CategoryPie = dynamic(
+  () => import("@/components/charts/category-pie").then((m) => m.CategoryPie),
+  { ssr: false, loading: () => <Skeleton className="h-[240px] w-full rounded-xl" /> }
+);
+const WeeklyBar = dynamic(
+  () => import("@/components/charts/weekly-bar").then((m) => m.WeeklyBar),
+  { ssr: false, loading: () => <Skeleton className="h-[200px] w-full rounded-xl" /> }
+);
 import { useDashboard } from "@/hooks/use-dashboard";
 import type { IncomeBalance } from "@/lib/aggregations";
 import { formatCurrency, formatDate } from "@/lib/utils";

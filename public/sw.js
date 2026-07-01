@@ -1,8 +1,18 @@
-// Aile Finans — basit service worker (kurulabilirlik + temel çevrimdışı)
-const CACHE = "aile-finans-v1";
+// Aile Finans — service worker (v2)
+// Güvenlik: giriş yapılmış sayfa (navigation) HTML'i ÖNBELLEĞE ALINMAZ.
+// Böylece çıkış sonrası eski sayfalar geri getirilemez ve güncellemeler daima tazedir.
+const CACHE = "aile-finans-v2";
+const OFFLINE_URL = "/offline.html";
+const PRECACHE = [OFFLINE_URL, "/icon-192.png", "/icon-512.png", "/manifest.webmanifest"];
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE);
+      await cache.addAll(PRECACHE);
+      self.skipWaiting();
+    })()
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -20,39 +30,38 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
-  // Supabase ve diğer dış istekleri olduğu gibi ağa bırak
+  // Dış istekler (Supabase vb.) olduğu gibi ağa gider — asla önbelleğe alınmaz
   if (url.origin !== self.location.origin) return;
 
-  // Sayfa gezintileri: önce ağ, çevrimdışıysa önbellek
+  // Sayfa gezintileri: yalnız ağ (önbelleğe yazma yok). Çevrimdışıysa offline sayfası.
   if (req.mode === "navigate") {
     event.respondWith(
       (async () => {
         try {
-          const fresh = await fetch(req);
-          const cache = await caches.open(CACHE);
-          cache.put(req, fresh.clone());
-          return fresh;
+          return await fetch(req);
         } catch {
-          return (await caches.match(req)) || (await caches.match("/dashboard")) || Response.error();
+          return (await caches.match(OFFLINE_URL)) || Response.error();
         }
       })()
     );
     return;
   }
 
-  // Statik içerik: önbellekten ver, arka planda tazele
-  event.respondWith(
-    (async () => {
-      const cached = await caches.match(req);
-      const fetchPromise = fetch(req)
-        .then((res) => {
-          if (res && res.status === 200) {
-            caches.open(CACHE).then((c) => c.put(req, res.clone()));
-          }
-          return res;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })()
-  );
+  // Statik varlıklar (js/css/img/font): önbellekten ver, arka planda tazele
+  if (["style", "script", "image", "font"].includes(req.destination)) {
+    event.respondWith(
+      (async () => {
+        const cached = await caches.match(req);
+        const fetching = fetch(req)
+          .then((res) => {
+            if (res && res.status === 200) {
+              caches.open(CACHE).then((c) => c.put(req, res.clone()));
+            }
+            return res;
+          })
+          .catch(() => cached);
+        return cached || fetching;
+      })()
+    );
+  }
 });

@@ -46,5 +46,11 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Korumalı sayfalar önbelleğe alınmasın: çıkış sonrası geri tuşuyla
+  // eski (giriş yapılmış) içerik geri getirilemez.
+  if (!isAuthPage) {
+    response.headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
+  }
+
   return response;
 }

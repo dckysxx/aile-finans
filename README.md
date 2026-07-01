@@ -96,3 +96,17 @@ Yeni sürümde gider/harcamalar bir **gelir kaynağına** bağlanır ve her geli
 kendi bakiyesini bağımsız hesaplar. Mevcut Supabase veritabanında **bir kez** şu migration'ı çalıştır:
 `supabase/migration-2-income-source.sql` (SQL Editor). Güvenlidir: kolon nullable eklenir,
 mevcut kayıtlar bozulmaz. Eski kayıtların kaynağı boş kalır; yeni eklemelerde kaynak seçimi zorunludur.
+
+---
+
+## iOS'ta Uygulama Gibi Kurma (PWA)
+Uygulama App Store gerektirmez. Yayındaki (Vercel) HTTPS adresini kullan:
+1. **iPhone Safari** ile siteyi aç (Chrome değil).
+2. Alttaki **Paylaş** butonu → **Ana Ekrana Ekle**.
+3. Ana ekrandaki ikondan aç → Safari arayüzü olmadan, tam ekran, splash ekranıyla açılır.
+
+Android (Chrome): menü (⋮) → **Uygulamayı yükle**.
+
+Notlar: PWA yalnızca HTTPS'te (yayında) tam çalışır; `npm run dev` yerine `npm run build && npm start`
+ile lokalde de denenebilir. Güncellemeler sunucudan otomatik alınır (yeni sürüm açılışta uygulanır).
+Giriş yapmayan kullanıcı hiçbir sayfaya erişemez; çıkış sonrası geri tuşuyla eski sayfalar açılamaz.
