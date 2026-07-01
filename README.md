@@ -136,7 +136,12 @@ Web Push, iPhone'da yalnız **ana ekrana eklenmiş** PWA'da ve **iOS 16.4+** ile
 düğmesine bastığında izin istenir (ilk girişte istenmez).
 
 ### Mantık
-- Bugün son ödeme günü olan, ödenmemiş ve bildirimi **açık** kayıtlar kontrol edilir.
-- Gün boyunca ~2 saatte bir gönderilir; gün bitince otomatik durur, ertesi gün aynı kayıt için tekrarlamaz.
-- Her ödeme kartındaki **yeşil anahtar** o ödeme için bildirimi açar/kapatır (kullanıcı bazında saklanır).
+- Cron her gün **TR 13:00'da (UTC 10:00)** bir kez çalışır (`vercel.json`: `0 10 * * *`).
+- O gün son ödeme günü olan, ödenmemiş ve bildirimi **açık** kayıtlar bulunur.
+- Her kullanıcıya **tek toplu bildirim** gönderilir (birden fazla ödeme varsa: "Bugün son ödeme günü olan N ödemen var: …").
+- Aynı gün ikinci kez gönderilmez; ertesi gün o kayıt tekrar tetiklemez.
+- Ödeme kartındaki **yeşil anahtar** o ödeme için bildirimi açar/kapatır (kullanıcı bazında saklanır).
 - Yalnız bildirimi açık kullanıcılar sorgulanır → gereksiz sorgu yok, ölçeklenebilir.
+
+> Not: Vercel Hobby planı cron'u günde 1 kez çalıştırır; bu tasarım tam da buna uygundur.
+> Vercel cron saati yaklaşıktır (13:00–13:59 arası tetiklenebilir), günlük tek bildirim için sorun değildir.

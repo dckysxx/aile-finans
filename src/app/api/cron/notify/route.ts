@@ -6,8 +6,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const THROTTLE_MINUTES = 110; // ~2 saatte bir
-
 // Vercel Cron: CRON_SECRET tanımlıysa Authorization header'ı otomatik ekler.
 // Harici zamanlayıcılar için ?key=CRON_SECRET de kabul edilir.
 function authorized(req: Request): boolean {
@@ -17,13 +15,24 @@ function authorized(req: Request): boolean {
   return new URL(req.url).searchParams.get("key") === secret;
 }
 
-// Bildirim içeriğini üretir — ileride farklı tipler eklenebilir.
-function buildDuePayload(category: string, transactionId: string): PushPayload {
+// Kullanıcı başına TEK toplu bildirim üretir — ileride farklı tipler eklenebilir.
+function buildGroupedPayload(categories: string[]): PushPayload {
+  const count = categories.length;
+  if (count === 1) {
+    return {
+      title: "Bugün son ödeme günü",
+      body: `${categories[0]} ödemesinin bugün son ödeme günü. Ödemeyi unutma.`,
+      url: "/notifications",
+      tag: "due-today",
+    };
+  }
+  const preview = categories.slice(0, 3).join(", ");
+  const extra = count > 3 ? ` +${count - 3}` : "";
   return {
     title: "Bugün son ödeme günü",
-    body: `${category} ödemesinin bugün son ödeme günü. Ödemeyi unutma.`,
+    body: `Bugün son ödeme günü olan ${count} ödemen var: ${preview}${extra}.`,
     url: "/notifications",
-    tag: `due-${transactionId}`,
+    tag: "due-today",
   };
 }
 
@@ -47,37 +56,41 @@ async function run() {
     (t) => (t.is_recurring && t.recurring_day === dayOfMonth) || t.date === today
   );
 
+  // Kullanıcı bazında grupla → her kullanıcıya tek bildirim
+  const byUser = new Map<string, { id: string; category: string }[]>();
+  for (const t of due) {
+    const arr = byUser.get(t.user_id) ?? [];
+    arr.push({ id: t.id, category: t.category });
+    byUser.set(t.user_id, arr);
+  }
+
   let sent = 0;
   let skipped = 0;
   let cleaned = 0;
 
-  for (const t of due) {
-    // 2 saatlik aralık + gün içi mükerrer engelleme
+  for (const [userId, items] of Array.from(byUser.entries())) {
+    // Bugün bu kullanıcıya zaten gönderildiyse tekrar gönderme (günde bir kez)
     const { data: logs } = await supabase
       .from("notification_log")
-      .select("sent_at")
-      .eq("transaction_id", t.id)
+      .select("id")
+      .eq("user_id", userId)
       .eq("sent_on", today)
-      .order("sent_at", { ascending: false })
       .limit(1);
     if (logs && logs.length) {
-      const last = new Date(logs[0].sent_at).getTime();
-      if (now.getTime() - last < THROTTLE_MINUTES * 60 * 1000) {
-        skipped++;
-        continue;
-      }
+      skipped++;
+      continue;
     }
 
     const { data: subs } = await supabase
       .from("push_subscriptions")
       .select("endpoint,p256dh,auth")
-      .eq("user_id", t.user_id);
+      .eq("user_id", userId);
     if (!subs || subs.length === 0) {
       skipped++;
       continue;
     }
 
-    const payload = buildDuePayload(t.category, t.id);
+    const payload = buildGroupedPayload(items.map((i) => i.category));
     let anySent = false;
     for (const s of subs) {
       const res = await sendPush({ endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth }, payload);
@@ -89,12 +102,15 @@ async function run() {
     }
 
     if (anySent) {
-      await supabase.from("notification_log").insert({ user_id: t.user_id, transaction_id: t.id });
+      // Bugün gönderildi işareti (kapsanan her ödeme için)
+      await supabase
+        .from("notification_log")
+        .insert(items.map((i) => ({ user_id: userId, transaction_id: i.id })));
       sent++;
     }
   }
 
-  return { checked: due.length, sent, skipped, cleaned };
+  return { users: byUser.size, sent, skipped, cleaned };
 }
 
 export async function GET(req: Request) {
